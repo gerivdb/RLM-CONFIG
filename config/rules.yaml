@@ -1,0 +1,179 @@
+# RLM-CONFIG Detection Rules
+# Version: 1.0
+# Defines schemas and patterns for configuration drift detection
+
+schemas:
+  known_repositories:
+    file: "known_repositories.yaml"
+    required_fields:
+      - name
+      - full_name
+      - layer
+      - status
+      - role
+      - do_not_create
+      - enforcement_mode
+    optional_fields:
+      - local_path
+      - url
+      - logical_layers
+      - phi_cps
+      - ternary_role
+      - coord
+      - thousand_brains_ref
+      - intent_hash
+      - adr_ref
+      - fork_source
+      - private
+      - layer_correction
+    valid_layers:
+      - L0_CONSTITUTIONAL
+      - L0_CANON
+      - L1_CAUSALITY
+      - L1b
+      - L2_COMPOSITION
+      - L2_PLATFORM
+      - L2b_SENSOR
+      - L2b_QUALIFIER
+      - L3_EMERGENCE
+      - L3_CITIZENS
+      - L4_TOOLS
+    valid_statuses:
+      - ACTIVE
+      - active
+      - dormant
+      - archived
+    valid_enforcement_modes:
+      - ci
+      - branch_protection
+      - hooks
+      - rss_lint
+      - vyoa
+      - brgs
+
+  ecos_root:
+    file: "ECOS_ROOT.json"
+    required_fields:
+      - version
+      - repos
+    repo_required_fields:
+      - name
+      - path
+      - remote
+    optional_fields:
+      - branch
+      - layer
+
+  kilocode_mcp:
+    file: ".kilocode/mcp.json"
+    required_fields:
+      - mcpServers
+    server_required_fields:
+      - command
+      - args
+      - env
+
+detection_rules:
+  - id: "DRIFT_001"
+    name: "Missing required field in known_repositories.yaml"
+    severity: "critical"
+    target: "known_repositories.yaml"
+    check: "required_fields_present"
+    description: "Each repo entry must have all required fields"
+
+  - id: "DRIFT_002"
+    name: "Invalid layer value"
+    severity: "high"
+    target: "known_repositories.yaml"
+    check: "valid_layer"
+    description: "Layer must be one of the valid L* strata"
+
+  - id: "DRIFT_003"
+    name: "Invalid status value"
+    severity: "medium"
+    target: "known_repositories.yaml"
+    check: "valid_status"
+    description: "Status must be ACTIVE, active, dormant, or archived"
+
+  - id: "DRIFT_004"
+    name: "Missing local_path for active repo"
+    severity: "high"
+    target: "known_repositories.yaml"
+    check: "local_path_present_if_active"
+    description: "Active repos must have local_path defined"
+
+  - id: "DRIFT_005"
+    name: "ECOS_ROOT.json missing repo entry"
+    severity: "high"
+    target: "ECOS_ROOT.json"
+    check: "repo_entries_complete"
+    description: "All known repos should be in ECOS_ROOT.json"
+
+  - id: "DRIFT_006"
+    name: "MCP server missing required fields"
+    severity: "critical"
+    target: ".kilocode/mcp.json"
+    check: "mcp_server_fields"
+    description: "Each MCP server must have command, args, env"
+
+  - id: "DRIFT_007"
+    name: "do_not_create flag missing"
+    severity: "critical"
+    target: "known_repositories.yaml"
+    check: "do_not_create_present"
+    description: "Every repo must have do_not_create: true"
+
+  - id: "DRIFT_008"
+    name: "Enforcement mode missing required keys"
+    severity: "high"
+    target: "known_repositories.yaml"
+    check: "enforcement_mode_complete"
+    description: "enforcement_mode must have all 6 required keys"
+
+  - id: "DRIFT_009"
+    name: "Ternary role structure invalid"
+    severity: "medium"
+    target: "known_repositories.yaml"
+    check: "ternary_role_structure"
+    description: "ternary_role must have primary, secondary, forbidden arrays"
+
+  - id: "DRIFT_010"
+    name: "Duplicate repo entries"
+    severity: "high"
+    target: "known_repositories.yaml"
+    check: "no_duplicate_entries"
+    description: "No duplicate full_name entries allowed"
+
+auto_fix_rules:
+  - drift_id: "DRIFT_003"
+    action: "set_default"
+    default_value: "active"
+    description: "Set default status to 'active' if missing/invalid"
+
+  - drift_id: "DRIFT_007"
+    action: "add_field"
+    default_value: true
+    description: "Add do_not_create: true if missing"
+
+  - drift_id: "DRIFT_008"
+    action: "merge_defaults"
+    default_enforcement:
+      ci: "full"
+      branch_protection: "full"
+      hooks: "full"
+      rss_lint: "all-checks"
+      vyoa: "full"
+      brgs: "full"
+    description: "Merge missing enforcement_mode keys with defaults"
+
+  - drift_id: "DRIFT_009"
+    action: "set_default_structure"
+    default_structure:
+      primary: []
+      secondary: []
+      forbidden: []
+    description: "Add default ternary_role structure if missing"
+
+  - drift_id: "DRIFT_004"
+    action: "infer_path"
+    description: "Infer local_path from layer and name if missing"
