@@ -28,7 +28,7 @@ schemas:
       - layer_correction
     valid_layers:
       - L0_CONSTITUTIONAL
-      - L0_CANON
+      - L0-CANON
       - L1_CAUSALITY
       - L1b
       - L2_COMPOSITION
@@ -38,7 +38,8 @@ schemas:
       - L3_EMERGENCE
       - L3_CITIZENS
       - L4_TOOLS
-      - L5_ARCHIVE
+      - L5-ARCHIVE
+      - L1-INFRA
     valid_statuses:
       - ACTIVE
       - active
