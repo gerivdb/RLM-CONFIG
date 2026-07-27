@@ -124,21 +124,30 @@ class ConfigGuardian:
         ruleset = self.targets.get("rulesets", {}).get(ruleset_name, [])
 
         for file_spec in target.get("files", []):
-            file_path = Path(target["local_path"]) / file_spec
+            if isinstance(file_spec, dict):
+                file_path = Path(target["local_path"]) / file_spec.get("path", "")
+                optional = file_spec.get("optional", False)
+                display_path = file_spec.get("path", str(file_path))
+            else:
+                file_path = Path(target["local_path"]) / file_spec
+                optional = False
+                display_path = file_spec
             if not file_path.exists():
+                if optional:
+                    continue
                 # Create a drift for missing file
                 drift = Drift(
                     drift_id="DRIFT_FILE_MISSING",
                     severity="critical",
-                    target_file=file_spec,
+                    target_file=display_path,
                     repo=repo_name,
-                    description=f"Configuration file {file_spec} not found at {file_path}",
+                    description=f"Configuration file {display_path} not found at {file_path}",
                     details={"expected_path": str(file_path)},
                     auto_fixable=False
                 )
                 results.append(ScanResult(
                     repo=repo_name,
-                    file=file_spec,
+                    file=display_path,
                     drifts=[drift]
                 ))
                 continue
@@ -153,7 +162,7 @@ class ConfigGuardian:
                 # No changes, skip detailed scan
                 results.append(ScanResult(
                     repo=repo_name,
-                    file=file_spec,
+                    file=display_path,
                     drifts=[]
                 ))
                 continue
@@ -171,7 +180,7 @@ class ConfigGuardian:
                     drifts.append(Drift(
                         drift_id="YAML_PARSE_ERROR",
                         severity="critical",
-                        target_file=file_spec,
+                        target_file=display_path,
                         repo=repo_name,
                         description=f"YAML parse error: {exc}",
                         details={"error": str(exc), "parser": "yaml.safe_load"},
@@ -180,7 +189,7 @@ class ConfigGuardian:
                     ))
                     results.append(ScanResult(
                         repo=repo_name,
-                        file=file_spec,
+                        file=display_path,
                         drifts=drifts
                     ))
                     continue
@@ -193,11 +202,11 @@ class ConfigGuardian:
                     self.checkpoint["file_hashes"][str(file_path)] = file_hash
                     results.append(ScanResult(
                         repo=repo_name,
-                        file=file_spec,
+                        file=display_path,
                         drifts=[Drift(
                             drift_id="JSON_PARSE_ERROR",
                             severity="critical",
-                            target_file=file_spec,
+                            target_file=display_path,
                             repo=repo_name,
                             description=f"JSON parse error: {exc}",
                             details={"error": str(exc), "parser": "json.loads"},
@@ -211,7 +220,7 @@ class ConfigGuardian:
 
             # Run detection rules
             drifts = self._run_detection_rules(
-                repo_name, file_spec, parsed, ruleset, content
+                repo_name, display_path, parsed, ruleset, content
             )
 
             # Update checkpoint
@@ -221,7 +230,7 @@ class ConfigGuardian:
 
             results.append(ScanResult(
                 repo=repo_name,
-                file=file_spec,
+                file=display_path,
                 drifts=drifts
             ))
 
@@ -628,9 +637,9 @@ class ConfigGuardian:
         """Scan all configured repositories."""
         results = {}
         for target in self.targets["targets"]:
-            repo_results = self.scan_repo(target["repo"])
-            if repo_results:
-                results[target["repo"]] = repo_results
+            repo = target["repo"]
+            repo_results = self.scan_repo(repo)
+            results[repo] = repo_results or []
         self.checkpoint["last_scan"] = datetime.utcnow().isoformat() + "Z"
         self._save_checkpoint()
         return results
@@ -676,5 +685,8 @@ class ConfigGuardian:
         elif drift.fix_action == "infer_path":
             result["details"] = {"inferred_from": drift.fix_details}
             result["success"] = True
+        else:
+            result["error"] = "Auto-fix action not implemented"
+            result["success"] = False
 
         return result

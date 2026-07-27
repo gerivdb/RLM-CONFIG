@@ -16,140 +16,160 @@ targets:
     layer: "L1_CAUSALITY"
     local_path: "D:\\DO\\WEB\\TOOLS\\L1-INFRA\\ECOS-CLI"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "NEXUS"
     layer: "L1_CAUSALITY"
     local_path: "D:\\DO\\WEB\\TOOLS\\L1-INFRA\\NEXUS"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "KIVA"
     layer: "L1_CAUSALITY"
     local_path: "D:\\DO\\WEB\\TOOLS\\L1-INFRA\\KIVA"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "GATEWAY-MANAGER"
     layer: "L1_CAUSALITY"
     local_path: "D:\\DO\\WEB\\TOOLS\\L1-INFRA\\GATEWAY-MANAGER"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "BRAIN"
     layer: "L3_EMERGENCE"
     local_path: "D:\\DO\\WEB\\TOOLS\\L0-CANON\\BRAIN"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "ONTOLOGY"
     layer: "L1_CAUSALITY"
     local_path: "D:\\DO\\WEB\\TOOLS\\L0-CANON\\ONTOLOGY"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "RLM-CONFIG"
     layer: "L2_PLATFORM"
     local_path: "D:\\DO\\WEB\\TOOLS\\L2-PLATFORM\\RLM-CONFIG"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "RLM-MDU"
     layer: "L2b_QUALIFIER"
     local_path: "D:\\DO\\WEB\\TOOLS\\L2-PLATFORM\\RLM-MDU"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "PLIX"
     layer: "L2_PLATFORM"
     local_path: "D:\\DO\\WEB\\TOOLS\\L2-PLATFORM\\PLIX"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "DAG-3"
     layer: "L2_PLATFORM"
     local_path: "D:\\DO\\WEB\\TOOLS\\L2-PLATFORM\\DAG-3"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "PULSE"
     layer: "L2_PLATFORM"
     local_path: "D:\\DO\\WEB\\TOOLS\\L2-PLATFORM\\PULSE"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "auto-dev"
     layer: "L2_PLATFORM"
     local_path: "D:\\DO\\WEB\\TOOLS\\L2-PLATFORM\\auto-dev"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "EMIT"
     layer: "L2_COMPOSITION"
     local_path: "D:\\DO\\WEB\\TOOLS\\L2-PLATFORM\\EMIT"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "BIRDY"
     layer: "L2_PLATFORM"
     local_path: "D:\\DO\\WEB\\TOOLS\\L2-PLATFORM\\BIRDY"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "KIVA-CLI"
     layer: "L2_COMPOSITION"
     local_path: "D:\\DO\\WEB\\TOOLS\\L1-INFRA\\KIVA-CLI"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "FLUENCE"
     layer: "L3_EMERGENCE"
     local_path: "D:\\DO\\WEB\\TOOLS\\L1-INFRA\\FLUENCE"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "TOPOS"
     layer: "L1b"
     local_path: "D:\\DO\\WEB\\TOOLS\\L1-INFRA\\TOPOS"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "TQL"
     layer: "L4_TOOLS"
     local_path: "D:\\DO\\WEB\\TOOLS\\L4-TOOLS\\TQL"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "TRIX"
     layer: "L4_TOOLS"
     local_path: "D:\\DO\\WEB\\TOOLS\\L4-TOOLS\\TRIX"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
   - repo: "CTULU"
     layer: "L4_TOOLS"
     local_path: "D:\\DO\\WEB\\TOOLS\\L4-TOOLS\\CTULU"
     files:
-      - ".kilocode/mcp.json"
+      - path: ".kilocode/mcp.json"
+        optional: true
     ruleset: "kilocode_mcp"
 
 rulesets:
