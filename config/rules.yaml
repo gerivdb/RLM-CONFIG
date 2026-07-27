@@ -38,6 +38,7 @@ schemas:
       - L3_EMERGENCE
       - L3_CITIZENS
       - L4_TOOLS
+      - L5_ARCHIVE
     valid_statuses:
       - ACTIVE
       - active
