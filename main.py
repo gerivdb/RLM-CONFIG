@@ -19,6 +19,7 @@ def main():
     parser = argparse.ArgumentParser(description="RLM-CONFIG - Configuration Drift Guardian (port 8794)")
     parser.add_argument("--port", type=int, default=8794, help="Port to run server on")
     parser.add_argument("--scan", action="store_true", help="Run full scan and exit")
+    parser.add_argument("--repos", type=str, default=None, help="Scan specific repo or 'ALL'")
     parser.add_argument("--detect", type=str, help="Run detection on specific repo")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
     
@@ -27,8 +28,10 @@ def main():
     # Change to RLM-CONFIG directory
     os.chdir(Path(__file__).parent)
     
-    if args.scan:
+    if args.scan or args.repos == "ALL":
         run_scan_all()
+    elif args.repos:
+        run_detect(args.repos)
     elif args.detect:
         run_detect(args.detect)
     else:
