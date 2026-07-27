@@ -403,6 +403,8 @@ class ConfigGuardian:
                             continue
                         status = entry.get("status", "").lower()
                         if status in ["active", "actif"]:
+                            if entry.get("optional") is True:
+                                continue
                             local_path = entry.get("local_path")
                             if not local_path or local_path == "null":
                                 drifts.append(Drift(
