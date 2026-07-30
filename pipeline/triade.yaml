@@ -1,0 +1,80 @@
+- deploy:
+        name: "🚀 Déploiement triade"
+        timeout: 300s
+        strategy: "blue-green"
+        steps:
+          - name: "Déployer LLUX"
+            command: "cp zig-out/bin/llux /opt/trix/bin/llux"
+            repo: "L3-CITIZENS/LLUX"
+          - name: "Déployer TRIX"
+            command: "cp zig-out/bin/trix /usr/local/bin/trix"
+            repo: "L4-TOOLS/TRIX"
+          - name: "Déployer PIANO"
+            command: "cp zig-out/bin/piano /opt/piano/bin/piano"
+            repo: "L4-TOOLS/PIANO"
+          - name: "Déployer SPIDX"
+            command: "cp zig-out/bin/spidx /opt/spidx/bin/spidx"
+            repo: "L4-TOOLS/SPIDX"
+          - name: "Démarrer LLUX via TRIX"
+            command: "trix backend start llux"
+          - name: "Vérifier GATEWAY-MANAGER"
+            command: "curl -f http://localhost:9000/mcp/llux/llm/chat/health"
+
+    - verify:
+        name: "✅ Vérification post-déploiement"
+        timeout: 120s
+        steps:
+          - name: "Health endpoint"
+            command: "curl -f http://localhost:47000/health"
+            expected: '{"status":"healthy"}'
+          - name: "Chat endpoint"
+            command: |
+              curl -f -X POST http://localhost:47000/v1/chat/completions \
+                -H "Content-Type: application/json" \
+                -d '{"messages":[{"role":"user","content":"test"}],"model":"bitnet-1.58b"}'
+            expected_contains: "choices"
+          - name: "Embedding endpoint"
+            command: |
+              curl -f -X POST http://localhost:47000/v1/embeddings \
+                -H "Content-Type: application/json" \
+                -d '{"input":"test","model":"nomic-embed-v1.5"}'
+            expected_contains: "embedding"
+          - name: "GATEWAY route"
+            command: |
+              curl -f -X POST http://localhost:9000/mcp/llux/llm/chat \
+                -H "Content-Type: application/json" \
+                -d '{"messages":[{"role":"user","content":"test"}]}'
+
+    - metrics:
+        name: "📊 Collecte métriques"
+        steps:
+          - name: "Latence LLUX"
+            metric: "llux_latency_ms"
+            command: "curl -w '%{time_total}' -o /dev/null -s http://localhost:47000/health"
+          - name: "Tokens/sec"
+            metric: "llux_tokens_per_sec"
+            command: "curl -s -X POST http://localhost:47000/v1/chat/completions -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | jq '.usage.total_tokens'"
+          - name: "RAM usage"
+            metric: "llux_memory_mb"
+            command: "ps -o vsz= -p $(pgrep llux) | awk '{print $1/1024}'"
+
+  error_handling:
+    on_failure: "rollback"
+    retry_count: 2
+    retry_delay: 10s
+    notify:
+      - slack: "#infra-alerts"
+      - email: "devops@ecosystem.com"
+
+  on_success:
+    notify:
+      - slack: "#releases"
+      - email: "team@ecosystem.com"
+
+  metrics:
+    enabled: true
+    collectors:
+      - build_time
+      - test_coverage
+      - deployment_duration
+      - rollback_count
