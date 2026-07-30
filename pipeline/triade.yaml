@@ -1,0 +1,141 @@
+# RLM-CONFIG/pipeline/triade.yaml
+# Pipeline de release pour la triade cognitive LLUX + PIANO + SPIDX
+
+pipeline:
+  name: triade
+  version: 1.0.0
+  description: "Release pipeline pour la triade cognitive L4 (LLUX + PIANO + SPIDX)"
+  
+  environments:
+    - dev
+    - staging
+    - production
+  
+  stages:
+    - build:
+        name: "🔨 Compilation Westmere"
+        timeout: 600s
+        steps:
+          - component: llux
+            repo: "L3-CITIZENS/LLUX"
+            command: "zig build -Dcpu=westmere -Drelease-fast"
+            artifacts:
+              - "zig-out/bin/llux"
+          - component: piano
+            repo: "L4-TOOLS/PIANO"
+            command: "zig build -Dcpu=westmere -Drelease-fast"
+            artifacts:
+              - "zig-out/bin/piano"
+          - component: spidx
+            repo: "L4-TOOLS/SPIDX"
+            command: "zig build -Dcpu=westmere -Drelease-fast"
+            artifacts:
+              - "zig-out/bin/spidx"
+          - component: trix
+            repo: "L4-TOOLS/TRIX"
+            command: "zig build -Dcpu=westmere -Drelease-fast"
+            artifacts:
+              - "zig-out/bin/trix"
+
+    - test:
+        name: "🧪 Tests d'intégration"
+        timeout: 300s
+        steps:
+          - name: "LLUX health check"
+            command: "trix backend start llux && curl -f http://localhost:47000/health"
+            retries: 3
+          - name: "PIANO binding test"
+            command: "zig build test -- --test-filter llux"
+            repo: "L4-TOOLS/PIANO"
+          - name: "SPIDX embedding test"
+            command: "zig build test -- --test-filter embedding"
+            repo: "L4-TOOLS/SPIDX"
+          - name: "BPE tokenizer test"
+            command: "zig build test -- --test-filter bpe_tokenizer"
+            repo: "L3-CITIZENS/LLUX"
+          - name: "E2E triade test"
+            command: |
+              curl -f -X POST http://localhost:47000/v1/chat/completions \
+                -H "Content-Type: application/json" \
+                -d '{"messages":[{"role":"user","content":"Hello triade"}],"model":"bitnet-1.58b"}'
+
+    - deploy:
+        name: "🚀 Déploiement triade"
+        timeout: 300s
+        strategy: "blue-green"
+        steps:
+          - name: "Déployer LLUX"
+            command: "cp zig-out/bin/llux /opt/trix/bin/llux"
+            repo: "L3-CITIZENS/LLUX"
+          - name: "Déployer TRIX"
+            command: "cp zig-out/bin/trix /usr/local/bin/trix"
+            repo: "L4-TOOLS/TRIX"
+          - name: "Déployer PIANO"
+            command: "cp zig-out/bin/piano /opt/piano/bin/piano"
+            repo: "L4-TOOLS/PIANO"
+          - name: "Déployer SPIDX"
+            command: "cp zig-out/bin/spidx /opt/spidx/bin/spidx"
+            repo: "L4-TOOLS/SPIDX"
+          - name: "Démarrer LLUX via TRIX"
+            command: "trix backend start llux"
+          - name: "Vérifier GATEWAY-MANAGER"
+            command: "curl -f http://localhost:9000/mcp/llux/llm/chat/health"
+
+    - verify:
+        name: "✅ Vérification post-déploiement"
+        timeout: 120s
+        steps:
+          - name: "Health endpoint"
+            command: "curl -f http://localhost:47000/health"
+            expected: '{"status":"healthy"}'
+          - name: "Chat endpoint"
+            command: |
+              curl -f -X POST http://localhost:47000/v1/chat/completions \
+                -H "Content-Type: application/json" \
+                -d '{"messages":[{"role":"user","content":"test"}],"model":"bitnet-1.58b"}'
+            expected_contains: "choices"
+          - name: "Embedding endpoint"
+            command: |
+              curl -f -X POST http://localhost:47000/v1/embeddings \
+                -H "Content-Type: application/json" \
+                -d '{"input":"test","model":"nomic-embed-v1.5"}'
+            expected_contains: "embedding"
+          - name: "GATEWAY route"
+            command: |
+              curl -f -X POST http://localhost:9000/mcp/llux/llm/chat \
+                -H "Content-Type: application/json" \
+                -d '{"messages":[{"role":"user","content":"test"}]}'
+
+    - metrics:
+        name: "📊 Collecte métriques"
+        steps:
+          - name: "Latence LLUX"
+            metric: "llux_latency_ms"
+            command: "curl -w '%{time_total}' -o /dev/null -s http://localhost:47000/health"
+          - name: "Tokens/sec"
+            metric: "llux_tokens_per_sec"
+            command: "curl -s -X POST http://localhost:47000/v1/chat/completions -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' | jq '.usage.total_tokens'"
+          - name: "RAM usage"
+            metric: "llux_memory_mb"
+            command: "ps -o vsz= -p $(pgrep llux) | awk '{print $1/1024}'"
+
+  error_handling:
+    on_failure: "rollback"
+    retry_count: 2
+    retry_delay: 10s
+    notify:
+      - slack: "#infra-alerts"
+      - email: "devops@ecosystem.com"
+
+  on_success:
+    notify:
+      - slack: "#releases"
+      - email: "team@ecosystem.com"
+
+  metrics:
+    enabled: true
+    collectors:
+      - build_time
+      - test_coverage
+      - deployment_duration
+      - rollback_count
