@@ -1,4 +1,65 @@
-- deploy:
+# RLM-CONFIG/pipeline/triade.yaml
+# Pipeline de release pour la triade cognitive LLUX + PIANO + SPIDX
+
+pipeline:
+  name: triade
+  version: 1.0.0
+  description: "Release pipeline pour la triade cognitive L4 (LLUX + PIANO + SPIDX)"
+  
+  environments:
+    - dev
+    - staging
+    - production
+  
+  stages:
+    - build:
+        name: "🔨 Compilation Westmere"
+        timeout: 600s
+        steps:
+          - component: llux
+            repo: "L3-CITIZENS/LLUX"
+            command: "zig build -Dcpu=westmere -Drelease-fast"
+            artifacts:
+              - "zig-out/bin/llux"
+          - component: piano
+            repo: "L4-TOOLS/PIANO"
+            command: "zig build -Dcpu=westmere -Drelease-fast"
+            artifacts:
+              - "zig-out/bin/piano"
+          - component: spidx
+            repo: "L4-TOOLS/SPIDX"
+            command: "zig build -Dcpu=westmere -Drelease-fast"
+            artifacts:
+              - "zig-out/bin/spidx"
+          - component: trix
+            repo: "L4-TOOLS/TRIX"
+            command: "zig build -Dcpu=westmere -Drelease-fast"
+            artifacts:
+              - "zig-out/bin/trix"
+
+    - test:
+        name: "🧪 Tests d'intégration"
+        timeout: 300s
+        steps:
+          - name: "LLUX health check"
+            command: "trix backend start llux && curl -f http://localhost:47000/health"
+            retries: 3
+          - name: "PIANO binding test"
+            command: "zig build test -- --test-filter llux"
+            repo: "L4-TOOLS/PIANO"
+          - name: "SPIDX embedding test"
+            command: "zig build test -- --test-filter embedding"
+            repo: "L4-TOOLS/SPIDX"
+          - name: "BPE tokenizer test"
+            command: "zig build test -- --test-filter bpe_tokenizer"
+            repo: "L3-CITIZENS/LLUX"
+          - name: "E2E triade test"
+            command: |
+              curl -f -X POST http://localhost:47000/v1/chat/completions \
+                -H "Content-Type: application/json" \
+                -d '{"messages":[{"role":"user","content":"Hello triade"}],"model":"bitnet-1.58b"}'
+
+    - deploy:
         name: "🚀 Déploiement triade"
         timeout: 300s
         strategy: "blue-green"
