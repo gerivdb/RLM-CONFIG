@@ -159,14 +159,6 @@ def health():
             "status": "ok" if Path(CONFIG_DIR, "checkpoint.json").exists() else "warn",
             "path": str(Path(CONFIG_DIR, "checkpoint.json"))
         },
-        "memory": {
-            "status": "ok",
-            "usage_mb": round(psutil.Process().memory_info().rss / 1024 / 1024, 2)
-        },
-        "disk": {
-            "status": "ok",
-            "free_gb": round(psutil.disk_usage("/").free / 1024 / 1024 / 1024, 2)
-        },
         "background_scan": {
             "status": "running" if scan_running else "stopped"
         }
@@ -522,3 +514,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
