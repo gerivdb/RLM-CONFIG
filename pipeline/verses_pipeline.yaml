@@ -1,0 +1,111 @@
+# RLM Pipeline - VERSES Orchestrator
+# Pipeline CI/CD pour VERSES orchestrateur central
+# IntentHash: 0xVERSES_RLM_PIPELINE_20260730
+version: \"1.0\"
+
+pipeline:
+  name: verses_rlm_pipeline
+  version: 1.0.0
+  description: Pipeline CI/CD pour VERSES orchestrateur central
+
+  stages:
+    - name: validation
+      description: Validation KIVA-CI + Audit ONTOLOGY
+      parallel: true
+      steps:
+        - name: kiva_ci_validation
+          description: Validation KIVA-CI meta-design.yaml
+          command: python scripts/validate_meta_design.py --schema schemas/meta-design.schema.json meta-design.yaml
+          workdir: D:/DO/WEB/TOOLS/L0-CANON/unified-design
+          timeout_seconds: 60
+
+        - name: ontology_audit
+          description: Audit ONTOLOGY concepts
+          command: python .github/scripts/concept_linter.py
+          workdir: D:/DO/WEB/ONTOLOGY
+          timeout_seconds: 120
+
+    - name: build
+      description: Compilation VERSES + VFT (Zig)
+      depends_on: [validation]
+      steps:
+        - name: zig_build_verses
+          description: Compilation VERSES Zig
+          command: zig build -Dcpu=westmere -Drelease-fast
+          workdir: D:/DO/WEB/TOOLS/L1-INFRA/VERSES
+          timeout_seconds: 300
+          artifacts: [zig-out/bin/verses.exe]
+
+        - name: zig_build_vft
+          description: Compilation VFT modules
+          command: zig build -Dcpu=westmere -Drelease-fast
+          workdir: D:/DO/WEB/TOOLS/L1-INFRA/VERSES/vft
+          timeout_seconds: 300
+          artifacts:
+            - zig-out/bin/vft_fractal.exe
+            - zig-out/bin/vft_ternary.exe
+            - zig-out/bin/vft_wal.exe
+
+    - name: test
+      description: Tests VERSES + VFT
+      depends_on: [build]
+      parallel: true
+      steps:
+        - name: verses_zig_test
+          description: Tests Zig VERSES
+          command: zig test -Dcpu=westmere
+          workdir: D:/DO/WEB/TOOLS/L1-INFRA/VERSES
+          timeout_seconds: 180
+
+        - name: verses_python_test
+          description: Tests Python VERSES
+          command: python -m pytest tests/ -v
+          workdir: D:/DO/WEB/TOOLS/L1-INFRA/VERSES
+          timeout_seconds: 120
+
+    - name: deploy
+      description: Deploiement Blue-Green VERSES
+      depends_on: [test]
+      steps:
+        - name: deploy_verses
+          description: Deploiement VERSES binaire + configs
+          command: copy zig-out\bin\verses.exe \opt\verses\bin\verses.exe && copy *.yaml \opt\verses\config\
+          workdir: D:\DO\WEB\TOOLS\L1-INFRA\VERSES
+          timeout_seconds: 60
+
+        - name: deploy_vft
+          description: Deploiement VFT modules
+          command: copy zig-out\bin\vft_*.exe \opt\verses\vft\
+          workdir: D:\DO\WEB\TOOLS\L1-INFRA\VERSES\vft
+          timeout_seconds: 60
+
+        - name: restart_verses
+          description: Redemarrage service VERSES
+          command: net stop verses && net start verses
+          timeout_seconds: 30
+
+    - name: verify
+      description: Verification post-deploiement
+      depends_on: [deploy]
+      steps:
+        - name: health_check
+          description: Health check VERSES endpoint
+          command: curl -f http://localhost:9999/health
+          timeout_seconds: 30
+
+        - name: pipeline_check
+          description: Verification pipeline VERSES actif
+          command: curl -f http://localhost:9999/verses/pipeline
+          timeout_seconds: 30
+
+  config:
+    bdcp_mode: true
+    clapet_guard: true
+    rollback_on_failure: true
+    rollback_timeout_seconds: 60
+    notifications:
+      on_success: false
+      on_failure: true
+      on_rollback: true
+    environment: production
+    bdcp_mode: true

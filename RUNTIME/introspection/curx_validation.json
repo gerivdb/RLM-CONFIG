@@ -1,0 +1,20 @@
+{
+  "repo": "RLM-CONFIG",
+  "statement_hash": "c6795fbe22089757bb198eed4b9d27da",
+  "curx_validated": true,
+  "result": {
+    "anomalies": [
+      "Missing teaches edges",
+      "Missing prerequisite_of edges",
+      "Missing consolidates edges"
+    ],
+    "causal_accuracy": 0.88,
+    "counterfactual_depth": 0.61,
+    "edges_validated": [],
+    "fragility": 0.15,
+    "generalization": 0.75,
+    "status": "ok"
+  },
+  "level": 1,
+  "validated_at": "2026-09-12T01:56:53.276014+00:00"
+}
