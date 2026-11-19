@@ -63,6 +63,8 @@ class NarrativeGenerator:
             return {"narrative": "", "metadata": {}, "confidence": 0.0, "error": f"HTTP Error {e.code}"}
         except urllib.error.URLError as e:
             return {"narrative": "", "metadata": {}, "confidence": 0.0, "error": f"Connection refused: {e.reason}"}
+        except OSError as e:
+            return {"narrative": "", "metadata": {}, "confidence": 0.0, "error": f"Connection refused: {e.reason}"}
         except Exception as e:
             return {"narrative": "", "metadata": {}, "confidence": 0.0, "error": f"Unexpected error: {str(e)}"}
 
