@@ -12,6 +12,15 @@ sys.path.insert(0, str(Path(__file__).parent))
 from health import app
 from config_guardian import ConfigGuardian
 
+# Dependance factorisee vers le package partage RLM-COMMON
+from rlm_common import (
+    causal_validator,
+    curriculum_validator,
+    meta_coherence_fixer,
+    narrative_generator,
+    rootx_client,
+)
+
 def create_app():
     """Create and configure the Flask app."""
     return app
