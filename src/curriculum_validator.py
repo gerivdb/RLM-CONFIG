@@ -62,6 +62,8 @@ class CurriculumValidator:
             return {"valid": False, "confidence": 0.0, "feedback": [f"HTTP Error {e.code}"]}
         except urllib.error.URLError as e:
             return {"valid": False, "confidence": 0.0, "feedback": [f"Connection refused: {e.reason}"]}
+        except OSError as e:
+            return {"valid": False, "confidence": 0.0, "feedback": [f"Connection refused: {e.reason}"]}
         except Exception as e:
             return {"valid": False, "confidence": 0.0, "feedback": [f"Unexpected error: {str(e)}"]}
 

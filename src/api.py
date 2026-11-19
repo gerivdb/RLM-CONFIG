@@ -60,7 +60,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="RLM-CONFIG - Configuration Drift Guardian")
-    parser.add_argument("--port", type=int, default=8794, help="Port to run server on")
+    parser.add_argument("--port", type=int, default=8801, help="Port to run server on")
     parser.add_argument("--scan", action="store_true", help="Run full scan and exit")
     parser.add_argument("--detect", type=str, help="Run detection on specific repo")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")

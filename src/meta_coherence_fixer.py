@@ -63,6 +63,8 @@ class MetaCoherenceFixer:
             return {"coherent": False, "fixes_applied": 0, "confidence": 0.0, "error": f"HTTP Error {e.code}"}
         except urllib.error.URLError as e:
             return {"coherent": False, "fixes_applied": 0, "confidence": 0.0, "error": f"Connection refused: {e.reason}"}
+        except OSError as e:
+            return {"coherent": False, "fixes_applied": 0, "confidence": 0.0, "error": f"Connection refused: {e.reason}"}
         except Exception as e:
             return {"coherent": False, "fixes_applied": 0, "confidence": 0.0, "error": f"Unexpected error: {str(e)}"}
 
